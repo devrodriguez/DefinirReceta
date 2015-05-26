@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html >
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>    
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+    <script src="../../../JavaScript/Bootstrap/bootstrap-table.min.js"></script>
+    <style type="text/css">
+        * {
+            font-size: 12px !important;
+        }
+
+        .panel {
+            padding: 2px !important;
+        }
+
+        .input-group-addon {
+            min-width: 100px;
+            text-align: left;
+        }
+    </style>
+    <title></title>
+</head>
+<body class="container-fluid">
+    <div class="navbar navbar-default">
+        <div class="container-fluid">
+            <button type="button" class="btn btn-default navbar-btn" aria-label="Left Align">
+                <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+            </button>
+        </div>
+    </div>
+    <div class="panel panel-primary">
+        <div class="panel-heading">Información de Bouquet</div>
+        <div class="panel-body">
+            <table id="tableInfoBouq" data-row-style="rowStyle">
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Recipes</div>
+                <div class="panel-body">
+                    <div class="container">
+                        <div class="radio">
+                            <span>
+                                <input type="radio" />Option 1 - Favorites</span>
+                        </div>
+                        <div class="radio">
+                            <span>
+                                <input type="radio" />Option 2 - New Recipe</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-primary">
+                <div class="panel-heading">UPC (Move with the mouse for change the order)</div>
+                <div class="panel-body">
+                    <div class="input-group">
+                        <span class="input-group-addon">Description</span>
+                        <input type="text" class="form-control" />
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon">UPC</span>
+                        <input type="text" class="form-control" />
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon">Retail Price</span>
+                        <input type="text" class="form-control" />
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon">UPC Date</span>
+                        <input type="text" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Tipo de Ramo</div>
+                <div class="panel-body">
+                    <div class="input-group">
+                        <span class="input-group-addon">Name</span>
+                        <input type="text" id="txtName" class="form-control" />
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon">Specs</span>
+                        <textarea id="txtaSpecs" class="form-control"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon">Construction</span>
+                        <textarea id="txtaConstruction" class="form-control"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon">Bunches</span>
+                        <input type="text" id="txtBunches" class="form-control" />
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon">Miami Price</span>
+                        <input type="text" id="txtMiamiPrice" class="form-control" />
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon">Food</span>
+                        <input type="text" id="txtFood" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Información Principal</div>
+                <div class="panel-body">
+                    <table id="table-recipe" data-toggle="table" data-cache="false"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Sleeve</div>
+                <div class="panel-body">
+                    <div class="input-group">
+                        <span class="input-group-addon">Sleeve</span>
+                        <input type="text" id="txtSleeve" class="form-control" />
+                    </div>
+                    <table id="tableSleeve" data-toggle="table" data-cache="false"></table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Información de Ramo</div>
+                <div class="panel-body">
+                    <table id="table-"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../../../JavaScript/Aplicaciones/Bouquets/DefinirReceta.js"></script>
+</body>
+</html>

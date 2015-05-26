@@ -1,0 +1,399 @@
+﻿<!DOCTYPE html >
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css" />
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" />
+    <!--<link href="../../../App_Themes/Fresca/bootstrap.min.css" rel="stylesheet" />-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <!--<script src="../../../JavaScript/Bootstrap/bootstrap.min.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinysort/2.2.2/tinysort.min.js"></script>
+    <script src="../../../JavaScript/Bootstrap/bootstrap-table.min.js"></script>
+    <style type="text/css">
+        * {
+            font-size: 11px !important;
+        }
+
+        .modal-dialog {
+            width: 98%;
+            height: 98%;
+        }
+
+        .modal-body {
+            padding-top: 0px;
+        }
+
+        #pnlUPC > div {
+            cursor: move;
+        }
+
+        .panel-primary {
+            border: none;
+            border-bottom: red;
+        }
+
+            .panel-primary > .panel-heading {
+                background-color: #2AA887;
+                border-color: #39B500;
+            }
+
+        .panel-heading {
+            padding-top: 8px;
+            padding-bottom: 5px;
+            border-top-left-radius: 0px;
+            border-top-right-radius: 0px;
+        }
+
+        .glyphicon-remove,.glyphicon-repeat,.glyphicon-info-sign {
+            cursor: pointer;
+        }
+
+        .panel-body {
+            padding-top: 0px;
+        }
+
+        .popover {
+            max-width: none;
+        }
+
+        .col-lg-1, .col-lg-10, .col-lg-11, .col-lg-12, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-xs-1, .col-xs-10, .col-xs-11, .col-xs-12, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9 {
+            padding-right: 10px;
+            padding-left: 10px;
+            padding-top: 0px;
+            padding-bottom: 0px;
+        }
+
+        .panel, panel-primary, row {
+            margin-bottom: 5px;
+        }
+
+        table {
+            width: 100%;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            border: solid 1px #ddd;
+        }
+
+        .modal-body-over-hide {
+            overflow-x: scroll;
+        }
+
+        .validate-fail {
+            border: 1px solid red;
+            border-color: red;
+        }
+
+        .validate-success {
+            border: 1px solid green;
+            border-color: green;
+        }
+
+        .alert {
+            padding: 8px;
+            margin-bottom: 5px;
+        }
+        /*.alert-sm {
+            width: 200px;
+            overflow-x: no-display;
+            overflow-y: no-display;
+        }*/
+
+        .alert-floating {
+            border-width: 2px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+        }
+
+        .input-group {
+            width: 100%;
+        }
+
+        .input-group-addon {
+            min-width: 100px;
+            text-align: left;
+        }
+        #tbSearchRecipe td{
+            white-space: nowrap;
+        }
+        .tr-selected {
+            background-color: #BBCC30;
+        }
+    </style>
+    <title></title>
+</head>
+<body class="container-fluid">
+    <div>
+        <button type="button" id="btnBack" class="btn btn-default navbar-btn" aria-label="Left Align">
+            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+        </button>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">PO Detail</div>
+                <div class="panel-body" style="padding-bottom: 0px;">
+                    <table id="tableInfoBouq"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Recipes</div>
+                <div class="panel-body" style="padding-bottom: 0px;">
+                    <div class="container">
+                        <!--<div class="radio">
+                            <span>
+                                <input type="radio" id="rbFavorites" value="1" />Option 1 - Favorites</span>
+                        </div>-->
+                        <div class="radio">
+                            <span>
+                                <input type="radio" id="rbNewRecipe" value="2" checked="checked" />New Recipe</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-primary">
+                <div class="panel-heading">UPC (Move with the mouse for change the order)</div>
+                <div class="panel-body">
+                    <br />
+                    <div id="pnlUPC">
+                        <div class="input-group" id="upc">
+                            <span class="input-group-addon">UPC</span>
+                            <input type="text" id="txtUPC" class="form-control" maxlength="11" />
+                            <span id="spUPCMessage" class="input-group-addon" style="min-width: 15px;"></span>
+                        </div>
+                        <div class="input-group" id="descripcion">
+                            <span class="input-group-addon">Description</span>
+                            <input type="text" id="txtDescripcionUPC" class="form-control" />
+                        </div>
+                        <div class="input-group" id="precio">
+                            <span class="input-group-addon">Retail Price</span>
+                            <input type="text" id="txtPrecioUPC" class="form-control" />
+                        </div>
+                        <div class="input-group" id="fecha">
+                            <span class="input-group-addon">UPC Date</span>
+                            <input type="text" id="txtFechaUPC" class="form-control" title="Click to select date" />
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon">UPC Format</span>
+                        <input type="text" id="txtFormatoUPC" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Recipe</div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="button" id="btnAdd" class="btn btn-default navbar-btn" aria-label="Left Align">
+                                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>&nbsp;Add
+                                    </button>
+                                    <button type="button" id="btnSaveAll" class="btn btn-default navbar-btn" aria-label="Left Align">
+                                        <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>&nbsp;Save All
+                                    </button>
+                                    <button type="button" id="btnSearch" class="btn btn-default navbar-btn" aria-label="Left Align" data-toggle="modal" data-target="#mdSearchRecipe">
+                                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>&nbsp;Search
+                                    </button>
+                                    <button type="button" id="btnClear" class="btn btn-default navbar-btn" aria-label="Left Align">
+                                        <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>&nbsp;Clear
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon addon-size">Name</span>
+                                <input type="text" id="txtName" class="form-control" />
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">Specs</span>
+                                <textarea id="txtaSpecs" class="form-control"></textarea>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">Construction</span>
+                                <textarea id="txtaConstruction" class="form-control"></textarea>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">Bunches</span>
+                                <input type="text" id="txtBunches" class="form-control" />
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">Miami Price</span>
+                                <input type="text" id="txtMiamiPrice" class="form-control" />
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">Food</span>
+                                <input type="text" id="txtFood" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <table id="tbBouquets"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Sleeve</div>
+                <div class="panel-body">
+                    <br />
+                    <div class="input-group">
+                        <span class="input-group-addon">Sleeve</span>
+                        <input type="text" id="txtSleeve" class="form-control" />
+                    </div>
+                    <table id="tbSleeve"></table>
+                </div>
+            </div>
+            <div class="panel panel-primary">
+                <div class="panel-heading">Sticker</div>
+                <div class="panel-body">
+                    <br />
+                    <div class="input-group">
+                        <span class="input-group-addon">Sticker</span>
+                        <input type="text" id="txtSticker" class="form-control" />
+                    </div>
+                    <table id="tbSticker"></table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Recipe Detail</div>
+                <div class="panel-body" style="padding-bottom: 0px;">
+                    <table id="tbBouquetRecipe"></table>
+                    <table id="tbDetFormulaOP3"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Search All -->
+    <div class="modal" id="mdSearchRecipe" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Search Recipe</h4>
+                </div>
+                <div class="modal-body">
+                    <button type="button" id="btnSelectAll" class="btn btn-default navbar-btn" aria-label="Left Align">
+                        <span class="glyphicon glyphicon-check" aria-hidden="true"></span>&nbsp;Select All Filter
+                    </button>
+                    <button type="button" id="btnSearchRecipe" class="btn btn-default navbar-btn" aria-label="Left Align">
+                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>&nbsp;Search
+                    </button>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-addon">Bouquet Description</span>
+                                <input type="text" id="txtBouquetDesc" class="form-control" />
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">Filtered By</span>
+                                <select id="selBouqDesc" multiple="multiple" class="form-control">
+                                    <option value="1">Flower Type</option>
+                                    <option value="2">Variety</option>
+                                    <option value="3">Grade</option>
+                                    <option value="4">Units</option>
+                                    <option value="12">Code</option>
+                                    <option value="10">Item Number</option>
+                                    <option value="11">Customer</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-addon">Recipe Description</span>
+                                <input type="text" id="txtRecipeDesc" class="form-control" />
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">Filtered By</span>
+                                <select id="selBouqRecipe" multiple="multiple" class="form-control">
+                                    <option value="5">Name</option>
+                                    <option value="6">User</option>
+                                    <option value="7">Flower Type</option>
+                                    <option value="8">Variety</option>
+                                    <option value="9">Grade</option>
+                                    <option value="13">Specs</option>
+                                    <option value="14">Construction</option>
+                                    <option value="15">Stems</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-body modal-body-over-hide">
+                            <table id="tbSearchRecipe"></table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal bs-example-modal-sm" id="mdSearchBouquet" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="H1">Search Recipe Bouquets</h4>
+                </div>
+                <div class="modal-body">
+                    <button type="button" id="btnSelAllCriterio" class="btn btn-default navbar-btn" aria-label="Left Align">
+                        <span class="glyphicon glyphicon-check" aria-hidden="true"></span>&nbsp;Select All Filter
+                    </button>
+                    <button type="button" id="btnSearchBouquet" class="btn btn-default navbar-btn" aria-label="Left Align">
+                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>&nbsp;Search
+                    </button>
+                    <div class="input-group">
+                        <span class="input-group-addon">Search</span>
+                        <input type="text" id="txtTextSearch" class="form-control" />
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon">Filtered By</span>
+                        <select id="selParametros" multiple="multiple" class="form-control">
+                            <option value="nombre_tipo_flor">Flower Type</option>
+                            <option value="nombre_variedad_flor">Variety</option>
+                            <option value="nombre_grado_flor">Grade</option>
+                        </select>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-body modal-body-over-hide">
+                            <table id="tbSearchBouquet"></table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="alert-floating">
+        <ul>
+        </ul>
+    </div>
+    <script src="../../../JavaScript/Util/bootbox.min.js"></script>
+    <script src="../../../JavaScript/Aplicaciones/Bouquets/DefinirReceta.js"></script>
+</body>
+</html>
