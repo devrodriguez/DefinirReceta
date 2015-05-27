@@ -512,6 +512,7 @@ var DefinirReceta = function () {
             return that.regExp.numeric.test(value);
         },
         notification: function (principal, description, type) {
+            $('.alert-floating').empty();
             $('<li><div class="alert alert-' + type + '"><strong>' + principal + '</strong>&nbsp;<span>' + description + '</span></div></li>')
                 .css('display', 'block')
                 .appendTo('.alert-floating ul')
@@ -820,8 +821,12 @@ var DefinirReceta = function () {
         var idDetallePO = that.aux.getQueryVariable('idDetalle');
         var po = that.aux.getQueryVariable('po');
         var usuario = that.aux.getQueryVariable('usuario');
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ConsultarDetallePO', 'POST', '{"idDetallePO":"' + idDetallePO + '"}');
-        that.dataDetailPO = data[0];
+        try{
+            var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ConsultarDetallePO', 'POST', '{"idDetallePO":"' + idDetallePO + '"}');
+            that.dataDetailPO = data[0];
+        } catch(e) {
+
+        }
             
         that.$tableInfoBouq.bootstrapTable({
             classes: 'table',
