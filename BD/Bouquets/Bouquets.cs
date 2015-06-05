@@ -1827,6 +1827,7 @@ namespace Natuflora.BD.Bouquets
             return dataSet;
 
         }
+
         public DataSet CalcularDiaVuelo(string idFarm, string Fecha)
         {
             SqlConnection conn = null;
@@ -1949,7 +1950,6 @@ namespace Natuflora.BD.Bouquets
 
       #endregion 
         
-        
         #region RECETA 
 
         public DataSet ConsultarTipoFlor()
@@ -2068,6 +2068,7 @@ namespace Natuflora.BD.Bouquets
             return dataSet;
 
         }
+
         public DataSet BouquetConsulatarFlor(string accion,int idTipoFlor)
         {
             SqlConnection conn = null;
@@ -2109,6 +2110,7 @@ namespace Natuflora.BD.Bouquets
             return dataSet;
 
         }
+
         public DataSet InsertarFormula(string nombreFormulaBouquet, int idCuentaInterna, int idVersionBouquet, string especificacion, string construccion,string cadenaFormula,int opcionMenu,int unidades, decimal precio, int comida,int idDetalleVersionBouquet,int idFormatoUpc)
         {
             SqlConnection conn = null;
@@ -2194,6 +2196,7 @@ namespace Natuflora.BD.Bouquets
             return dataSet;
 
         }
+
         public DataSet ConsecutivoBoquet(int idVersionBouquet)
         {
             SqlConnection conn = null;
@@ -4094,7 +4097,7 @@ namespace Natuflora.BD.Bouquets
             sqlParam.Value = System.Data.SqlTypes.SqlDecimal.Null;
             sqlParam = cmd.Parameters.Add("@id_comida_bouquet", SqlDbType.Int);
             sqlParam.Value = System.Data.SqlTypes.SqlInt32.Null;
-            sqlParam = cmd.Parameters.Add("@id_version_bouquet ", SqlDbType.Int);
+            sqlParam = cmd.Parameters.Add("@id_version_bouquet", SqlDbType.Int);
             sqlParam.Value = idversion;
 
             try

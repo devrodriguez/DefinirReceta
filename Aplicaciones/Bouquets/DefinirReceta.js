@@ -162,7 +162,7 @@ function LoadDataField(scope) {
                         var dataBouquet = {};
                         var totalStems = 0;
                         scope.dataDetailBouquet.id_detalle_version_bouquet = row.id_detalle_version_bouquet;
-                        scope.LoadBouquetRecipe(true, false);
+                        scope.LoadBouquetRecipe(true, false, false);
 
                         $.each(scope.dataBouquetRecipe, function (id, item) {
                             totalStems += item.cantidad_tallos
@@ -491,11 +491,13 @@ var DefinirReceta = function () {
     this.col_table_search_recipe = [];
     //#endregion
 
+    //#region Variables Globales
     this.id_comida_bouquet = 0;
     this.id_formato_upc = 0;
     this.id_formula_bouquet = 0;
     this.disabled = 0;
     this.indexRowBouquet = 0;
+    //#endregion
 
     this.regExp = {
         emptyWs: /^[\w]+$/,
@@ -530,6 +532,13 @@ var DefinirReceta = function () {
                 }
             }
             return '';
+        },
+        numbersonly: function(e){
+            var unicode=e.charCode? e.charCode : e.keyCode
+            if (unicode!=8) {
+                if (unicode < 48 || unicode > 57) //if not a number
+                    return false;
+            }
         }
     }
 
@@ -551,15 +560,21 @@ var DefinirReceta = function () {
                 that.LoadBouquets();
             }
         });
-        this.$txtBunches.on('blur', function () {
-            if (this.value <= 0) {
-                that.aux.notification('Recipe: ', 'Insert a value greater than 0', 'info');
-                this.value = '';
-                return;
-            }
-            if (that.dataDetailBouquet.id_detalle_version_bouquet != undefined && that.dataDetailBouquet.id_detalle_version_bouquet != 0) {
-                that.InsertBasicBouquetDescription();
-                that.LoadBouquets();
+        this.$txtBunches.on({
+            'blur': function () {
+                if (this.value <= 0) {
+                    that.aux.notification('Recipe: ', 'Insert a value greater than 0', 'danger');
+                    this.value = '';
+                    return;
+                }
+
+                if (that.dataDetailBouquet.id_detalle_version_bouquet != undefined && that.dataDetailBouquet.id_detalle_version_bouquet != 0) {
+                    that.InsertBasicBouquetDescription();
+                    that.LoadBouquets();
+                }
+            },
+            'keypress': function (e) {
+                return that.aux.numbersonly(e);
             }
         });
         this.$txtMiamiPrice.on('blur', function () {
@@ -617,12 +632,11 @@ var DefinirReceta = function () {
                     that.$txtFormatoUPC.attr('data-content', "Please enter upc comment in specifications 'Specs' field.");
                     that.$txtFormatoUPC.popover('show');
                 }
-
+               
                 that.DisableUPC(ui.item.label);
 
                 if (that.dataDetailBouquet.id_detalle_version_bouquet != undefined && that.dataDetailBouquet.id_detalle_version_bouquet != 0) {
                     that.InsertBasicBouquetDescription();
-                    that.LoadBouquets();
                 }
             },
             focus: function (event, ui) {
@@ -817,12 +831,11 @@ var DefinirReceta = function () {
 
     this.LoadDetailPO = function () {
         var idDetallePO = that.aux.getQueryVariable('idDetalle');
-        var po = that.aux.getQueryVariable('po');
-        var usuario = that.aux.getQueryVariable('usuario');
+        var idDetalle = window.location.pathname.split('/');
         var data = [];
 
         try {
-            data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ConsultarDetallePO', 'POST', '{"idDetallePO":"' + idDetallePO + '"}');
+            data = AjaxQuery2('../../../Bouquets/ws', 'ConsultarDetallePO', 'POST', '{"idDetallePO":"' + idDetalle[idDetalle.length-1] + '"}');
             that.dataDetailPO = data[0];
         } catch (e) {
             that.aux.notification('Error: ', e.message, 'danger');
@@ -840,7 +853,7 @@ var DefinirReceta = function () {
         var totalBounches = 0;
         var dataBouquet = {};
             
-        this.dataBouquet = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadBouquets', 'POST', '{ "id_version_bouquet" : ' + that.dataDetailPO.id_version_bouquet + ' }');
+        this.dataBouquet = AjaxQuery2('../../../Bouquets/ws', 'ReadBouquets', 'POST', '{ "id_version_bouquet" : ' + that.dataDetailPO.id_version_bouquet + ' }');
         $.each(this.dataBouquet, function (id, item) {
             totalBounches += item.unidades
         });
@@ -853,34 +866,41 @@ var DefinirReceta = function () {
         that.dataBouquet.push(dataBouquet);
         that.$tbBouquets.bootstrapTable('load', this.dataBouquet);
 
-        //Carga el detalle del primer bouquet//
-        this.$tbBouquets.find('[id*=spLoadDetail]:eq(' + that.indexRowBouquet + ')').trigger('click');
+        //Carga el detalle del primer bouquet//   
+        if (totalBounches == 0)
+            that.LoadDataDetailBouquet();
+        else
+            this.$tbBouquets.find('[id*=spLoadDetail]:eq(' + that.indexRowBouquet + ')').trigger('click');
     }
 
     this.LoadDataDetailBouquet = function (e, value, row, index) {
-        that.indexRowBouquet = index;
-        that.$tbBouquets.find('tr').removeClass('tr-selected');
-        that.$tbBouquets.find('tr:eq(' + (index + 1) + ')').addClass('tr-selected');
-        
-        that.id_formula_bouquet = row.id_formula_bouquet;
-        that.ClearDetailBouquet();
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadDetailBouquet', 'POST', '{ "id_version_bouquet" : ' + that.dataDetailPO.id_version_bouquet + ', "id_formula_bouquet": ' + row.id_formula_bouquet + ' }');
-        if (data.length > 0) {
-            that.dataDetailBouquet = data[0];
-            that.SetDataDetailBouquet();
-            that.LoadUPC();
-            that.DisableUPC(that.$txtFormatoUPC.val());
-            that.SortUPC();
-            that.LoadTablaSleeve();
-            that.LoadTablaSticker();
-            that.LoadBouquetRecipe(false, true);
-            
-            if (that.dataDetailPO.id_status) {
-                that.LoadDetailFormulaOP3();
+        if (row === undefined) {
+            that.LoadBouquetRecipe(false, true, true);
+        } else {
+            that.indexRowBouquet = index;
+            that.$tbBouquets.find('tr').removeClass('tr-selected');
+            that.$tbBouquets.find('tr:eq(' + (index + 1) + ')').addClass('tr-selected');
+
+            that.id_formula_bouquet = row.id_formula_bouquet;
+            that.ClearDetailBouquet();
+            var data = AjaxQuery2('../../../Bouquets/ws', 'ReadDetailBouquet', 'POST', '{ "id_version_bouquet" : ' + that.dataDetailPO.id_version_bouquet + ', "id_formula_bouquet": ' + row.id_formula_bouquet + ' }');
+            if (data.length > 0) {
+                that.dataDetailBouquet = data[0];
+                that.SetDataDetailBouquet();
+                that.LoadUPC();
+                that.SortUPC();
+                that.LoadTablaSleeve();
+                that.LoadTablaSticker();
+                that.LoadBouquetRecipe(false, true, false);
+
+                if (that.dataDetailPO.id_status) {
+                    that.LoadDetailFormulaOP3();
+                }
+                that.aux.notification('', 'Detail recipe loaded', 'info');
             }
-            that.DisabledDOM();
-            that.aux.notification('', 'Detail recipe loaded', 'info');
         }
+        that.DisabledDOM();
+        that.DisableUPC(that.$txtFormatoUPC.val());
     }
 
     this.SetDataDetailBouquet = function () {
@@ -894,7 +914,7 @@ var DefinirReceta = function () {
     }
 
     this.LoadDataDetailBouquetSelected = function () {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadDetailBouquetSelected', 'POST', '{ "id_detalle_version_bouquet" : ' + that.dataDetailBouquet.id_detalle_version_bouquet + ' }');
+        var data = AjaxQuery2('../../../Bouquets/ws', 'ReadDetailBouquetSelected', 'POST', '{ "id_detalle_version_bouquet" : ' + that.dataDetailBouquet.id_detalle_version_bouquet + ' }');
         that.dataBouquet = data[0][0];
         that.dataDetailBouquet = data[1];
         that.dataDetailBouquet.id_detalle_version_bouquet = data[1][0].id_detalle_version_bouquet;
@@ -919,12 +939,12 @@ var DefinirReceta = function () {
 
     //#region Sleeve
     this.LoadTablaSleeve = function () {
-        that.dataTableSleeve = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadTablaSleeve', 'POST', '{ "id_detalle_version_bouquet" : ' + that.dataDetailBouquet.id_detalle_version_bouquet + '}');
+        that.dataTableSleeve = AjaxQuery2('../../../Bouquets/ws', 'ReadTablaSleeve', 'POST', '{ "id_detalle_version_bouquet" : ' + that.dataDetailBouquet.id_detalle_version_bouquet + '}');
         that.$tbSleeve.bootstrapTable('load', this.dataTableSleeve);
     }
 
     this.LoadDataSleeve = function (find) {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadSleeve', 'POST', '{"nombre_capuchon":"' + find + '"}');
+        var data = AjaxQuery2('../../../Bouquets/ws', 'ReadSleeve', 'POST', '{"nombre_capuchon":"' + find + '"}');
         this.dataSleeve = $.map(data, function (item) {
             return {
                 label: item.nombre_capuchon,
@@ -937,7 +957,7 @@ var DefinirReceta = function () {
         if (that.dataDetailBouquet.id_detalle_version_bouquet === undefined || that.dataDetailBouquet.id_detalle_version_bouquet == 0) {
             that.$tbSleeve.bootstrapTable('append', { id_capuchon_cultivo: item.value, nombre_capuchon: item.label });
         } else {
-            var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'InsertSleeve', 'POST', '{ "id_capuchon_cultivo" : "' + item.value + '", "id_detalle_version_bouquet": ' + that.dataDetailBouquet.id_detalle_version_bouquet + ' }');
+            var data = AjaxQuery2('../../../Bouquets/ws', 'InsertSleeve', 'POST', '{ "id_capuchon_cultivo" : "' + item.value + '", "id_detalle_version_bouquet": ' + that.dataDetailBouquet.id_detalle_version_bouquet + ' }');
             if (data[0].response > 0) {
                 that.LoadTablaSleeve();
                 that.aux.notification('Sleeve: ', 'Sleeve inserted', 'success');
@@ -955,7 +975,7 @@ var DefinirReceta = function () {
             var dataExist = that.$tbSleeve.bootstrapTable('getData');
             if (dataExist.length <= 1)
                 return;
-            var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'RemoveSleeve', 'POST', '{ "id_capuchon_cultivo" : ' + row.id_capuchon_cultivo + ', "id_detalle_version_bouquet": ' + that.dataDetailBouquet.id_detalle_version_bouquet + ' }');
+            var data = AjaxQuery2('../../../Bouquets/ws', 'RemoveSleeve', 'POST', '{ "id_capuchon_cultivo" : ' + row.id_capuchon_cultivo + ', "id_detalle_version_bouquet": ' + that.dataDetailBouquet.id_detalle_version_bouquet + ' }');
             if (data[0].responseMessage == '_removed') {
                 that.LoadTablaSleeve();
                 that.aux.notification('Sleeve: ', 'Sleeve removed', 'success');
@@ -967,12 +987,12 @@ var DefinirReceta = function () {
     //#region Sticker //
     this.LoadTablaSticker = function () {
         //that.id_detalle_version_bouquet = this.dataDetailBouquet.id_detalle_version_bouquet || that.id_detalle_version_bouquet;
-        that.dataTableSticker = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadTablaSticker', 'POST', '{ "id_detalle_version_bouquet" : ' + that.dataDetailBouquet.id_detalle_version_bouquet + '}');
+        that.dataTableSticker = AjaxQuery2('../../../Bouquets/ws', 'ReadTablaSticker', 'POST', '{ "id_detalle_version_bouquet" : ' + that.dataDetailBouquet.id_detalle_version_bouquet + '}');
         that.$tbSticker.bootstrapTable('load', that.dataTableSticker);
     }
 
     this.LoadDataSticker = function (find) {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadSticker', 'POST', '{"nombre_sticker":"' + find + '"}');
+        var data = AjaxQuery2('../../../Bouquets/ws', 'ReadSticker', 'POST', '{"nombre_sticker":"' + find + '"}');
         that.dataSticker = $.map(data, function (item) {
             return {
                 label: item.nombre_sticker,
@@ -985,7 +1005,7 @@ var DefinirReceta = function () {
         if (that.dataDetailBouquet.id_detalle_version_bouquet === undefined || that.dataDetailBouquet.id_detalle_version_bouquet == 0) {
             that.$tbSticker.bootstrapTable('append', { id_sticker: item.value, nombre_sticker: item.label });
         } else {
-            var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'InsertSticker', 'POST', '{ "id_sticker" : "' + item.value + '", "id_detalle_version_bouquet": ' + that.dataDetailBouquet.id_detalle_version_bouquet + ' }');
+            var data = AjaxQuery2('../../../Bouquets/ws', 'InsertSticker', 'POST', '{ "id_sticker" : "' + item.value + '", "id_detalle_version_bouquet": ' + that.dataDetailBouquet.id_detalle_version_bouquet + ' }');
             if (data[0].response > 0) {
                 that.LoadTablaSticker();
                 that.aux.notification('Sticker: ', 'Sticker inserted', 'success');
@@ -1000,7 +1020,7 @@ var DefinirReceta = function () {
                 values: [row.id_sticker]
             });
         } else {
-            var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'RemoveSticker', 'POST', '{ "id_sticker" : ' + row.id_sticker + ', "id_detalle_version_bouquet": ' + that.dataDetailBouquet.id_detalle_version_bouquet + ' }');
+            var data = AjaxQuery2('../../../Bouquets/ws', 'RemoveSticker', 'POST', '{ "id_sticker" : ' + row.id_sticker + ', "id_detalle_version_bouquet": ' + that.dataDetailBouquet.id_detalle_version_bouquet + ' }');
             if (data[0].responseMessage == '_removed') {
                 that.LoadTablaSticker();
                 that.aux.notification('Sticker', 'Sticker removed', 'success');
@@ -1010,7 +1030,7 @@ var DefinirReceta = function () {
     //#endregion
 
     this.LoadFood = function (find) {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadFood', 'POST', '{"nombre_comida_bouquet":"' + find + '"}');
+        var data = AjaxQuery2('../../../Bouquets/ws', 'ReadFood', 'POST', '{"nombre_comida_bouquet":"' + find + '"}');
         this.dataFood = $.map(data, function (item) {
             return {
                 label: item.nombre_comida_bouquet,
@@ -1020,7 +1040,7 @@ var DefinirReceta = function () {
     }
 
     this.LoadFormatoUPC = function (find) {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadFormatoUPC', 'POST', '{"nombre_formato":"' + find + '"}');
+        var data = AjaxQuery2('../../../Bouquets/ws', 'ReadFormatoUPC', 'POST', '{"nombre_formato":"' + find + '"}');
         this.dataFormatoUPC = $.map(data, function (item) {
             return {
                 label: item.nombre_formato,
@@ -1186,7 +1206,7 @@ var DefinirReceta = function () {
     }
 
     this.LoadFlowerType = function (find) {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadFlowerType', 'POST', '{ "nombre_tipo_flor" : "' + find + '" }');
+        var data = AjaxQuery2('../../../Bouquets/ws', 'ReadFlowerType', 'POST', '{ "nombre_tipo_flor" : "' + find + '" }');
         this.dataFlowerType = $.map(data, function (item) {
             return {
                 label: item.nombre_tipo_flor.trim(),
@@ -1196,7 +1216,7 @@ var DefinirReceta = function () {
     }
 
     this.LoadFlowerVariety = function (find, row) {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadFlowerVariety', 'POST', '{ "id_tipo_flor_cultivo" : ' + row.id_tipo_flor_cultivo + ', "nombre_variedad_flor" : "' + find + '" }');
+        var data = AjaxQuery2('../../../Bouquets/ws', 'ReadFlowerVariety', 'POST', '{ "id_tipo_flor_cultivo" : ' + row.id_tipo_flor_cultivo + ', "nombre_variedad_flor" : "' + find + '" }');
         this.dataFlowerVariety = $.map(data, function (item) {
             return {
                 label: item.nombre_variedad_flor.trim(),
@@ -1206,7 +1226,7 @@ var DefinirReceta = function () {
     }
 
     this.LoadFlowerVarietySus = function (find, row) {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadFlowerVariety', 'POST', '{ "id_tipo_flor_cultivo" : ' + row.id_tipo_flor_cultivo_sustitucion + ', "nombre_variedad_flor" : "' + find + '" }');
+        var data = AjaxQuery2('../../../Bouquets/ws', 'ReadFlowerVariety', 'POST', '{ "id_tipo_flor_cultivo" : ' + row.id_tipo_flor_cultivo_sustitucion + ', "nombre_variedad_flor" : "' + find + '" }');
         this.dataFlowerVariety = $.map(data, function (item) {
             return {
                 label: item.nombre_variedad_flor.trim(),
@@ -1216,7 +1236,7 @@ var DefinirReceta = function () {
     }
 
     this.LoadFlowerGrade = function (find, row) {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadFlowerGrade', 'POST', '{ "id_tipo_flor_cultivo" : ' + row.id_tipo_flor_cultivo + ', "nombre_grado_flor" : "' + find + '" }');
+        var data = AjaxQuery2('../../../Bouquets/ws', 'ReadFlowerGrade', 'POST', '{ "id_tipo_flor_cultivo" : ' + row.id_tipo_flor_cultivo + ', "nombre_grado_flor" : "' + find + '" }');
         this.dataFlowerGrade = $.map(data, function (item) {
             return {
                 label: item.nombre_grado_flor.trim(),
@@ -1226,7 +1246,7 @@ var DefinirReceta = function () {
     }
 
     this.LoadFlowerGradeSus = function (find, row) {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadFlowerGrade', 'POST', '{ "id_tipo_flor_cultivo" : ' + row.id_tipo_flor_cultivo_sustitucion + ', "nombre_grado_flor" : "' + find + '" }');
+        var data = AjaxQuery2('../../../Bouquets/ws', 'ReadFlowerGrade', 'POST', '{ "id_tipo_flor_cultivo" : ' + row.id_tipo_flor_cultivo_sustitucion + ', "nombre_grado_flor" : "' + find + '" }');
         this.dataFlowerGrade = $.map(data, function (item) {
             return {
                 label: item.nombre_grado_flor.trim(),
@@ -1287,14 +1307,20 @@ var DefinirReceta = function () {
     //#endregion
 
     this.LoadDetailFormulaOP3 = function () {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadDetailFormulaOP3', 'POST', '{ "id_detalle_version_bouquet" : ' + this.dataDetailBouquet.id_detalle_version_bouquet + '}');
+        var data = [];
+        try {
+            data = AjaxQuery2('../../../Bouquets/ws', 'ReadDetailFormulaOP3', 'POST', '{ "id_detalle_version_bouquet" : ' + this.dataDetailBouquet.id_detalle_version_bouquet + '}');
+        } catch (e) {
+            that.aux.notification('Error: ', e.message, 'danger');
+        }
+        
         this.$tbDetFormulaOP3.bootstrapTable('load', data);
     }
 
     this.RemoveBouquet = function (e, value, row, index) {
         if (confirm('Really you want to delete the recipe?')) {
             that.indexRowBouquet = 0;
-            var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'RemoveRecipe', 'POST', '{ "id_detalle_version_bouquet": ' + row.id_detalle_version_bouquet + ' }');
+            var data = AjaxQuery2('../../../Bouquets/ws', 'RemoveRecipe', 'POST', '{ "id_detalle_version_bouquet": ' + row.id_detalle_version_bouquet + ' }');
             if (data[0].responseMessage == '_removed') {
                 that.ClearDetailBouquet();
                 that.LoadBouquets();
@@ -1302,10 +1328,20 @@ var DefinirReceta = function () {
         }
     }
 
-    this.LoadBouquetRecipe = function (onlyData, emptyRow) {
-        that.dataBouquetRecipe = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadBouquetRecipe', 'POST', '{ "id_detalle_version_bouquet" : ' + that.dataDetailBouquet.id_detalle_version_bouquet + ', "getModel" : false, "emptyRow" : ' + emptyRow + ' }');
+    this.LoadBouquetRecipe = function (onlyData, emptyRow, model) {
+        that.dataBouquetRecipe = AjaxQuery2('../../../Bouquets/ws', 'ReadBouquetRecipe', 'POST', '{ "id_detalle_version_bouquet" : ' + (that.dataDetailBouquet.id_detalle_version_bouquet === undefined ? 0 : that.dataDetailBouquet.id_detalle_version_bouquet) + ', "getModel" : ' + model + ', "emptyRow" : ' + emptyRow + ' }');
+        if (model) {
+            var data = that.dataBouquetRecipe;
+            data = $.each(data, function (id, item) {
+                data[id] = ''
+            });
+
+            var dataDetailBouquet = [];
+            dataDetailBouquet.push(data);
+            that.$tbBouquetRecipe.bootstrapTable('load', dataDetailBouquet);
+        }
         if (!onlyData)
-            this.$tbBouquetRecipe.bootstrapTable('load', that.dataBouquetRecipe);
+            that.$tbBouquetRecipe.bootstrapTable('load', that.dataBouquetRecipe);
 
         that.CountStems();
     }
@@ -1346,11 +1382,16 @@ var DefinirReceta = function () {
         var objUPC = $.map(that.$pnlUPC.find('div'), function (value, key) {
             return {
                 descripcion_upc: $(value).find('input[type="text"]').val(),
-                orden_upc: key,
+                orden_upc: (key + 1),
                 nombre_informacion_upc: $(value).attr('id')
             }
         });
-        AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'InsertUPC', 'POST', '{"upc": ' + JSON.stringify(objUPC) + ', "id_detalle_version_bouquet":' + that.dataDetailBouquet.id_detalle_version_bouquet + '}');
+
+        try {
+            AjaxQuery2('../../../Bouquets/ws', 'InsertUPC', 'POST', '{"upc": ' + JSON.stringify(objUPC) + ', "id_detalle_version_bouquet":' + that.dataDetailBouquet.id_detalle_version_bouquet + '}');
+        } catch (e) {
+            that.aux.notification('Error: ', e.message, 'danger');
+        }
     }
 
     this.SortUPC = function () {
@@ -1360,7 +1401,11 @@ var DefinirReceta = function () {
     this.LoadColumnsSearchRecipe = function (texto, items_a_buscar, texto2, items_a_buscar2) {
         //Columnas Dinamicas//
         this.$tbSearchRecipe.bootstrapTable('destroy');
-        this.dataSearchRecipe = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadSearchRecipe', 'POST', '{"texto": "' + texto + '", "items_a_buscar": "' + items_a_buscar + '", "texto2": "' + texto2 + '", "items_a_buscar2": "' + items_a_buscar2 + '"}');
+        try {
+            this.dataSearchRecipe = AjaxQuery2('../../../Bouquets/ws', 'ReadSearchRecipe', 'POST', '{"texto": "' + texto + '", "items_a_buscar": "' + items_a_buscar + '", "texto2": "' + texto2 + '", "items_a_buscar2": "' + items_a_buscar2 + '"}');
+        } catch (e) {
+            AjaxQuery2('../../../Bouquets/ws', 'InsertUPC', 'POST', '{"upc": ' + JSON.stringify(objUPC) + ', "id_detalle_version_bouquet":' + that.dataDetailBouquet.id_detalle_version_bouquet + '}');
+        }
             
         this.col_table_search_recipe = $.map(that.dataSearchRecipe[0], function (value, key) {                
             return {
@@ -1395,8 +1440,8 @@ var DefinirReceta = function () {
             return;
         }
 
-        if (!that.regExp.empty.test(arrBouquetRecipe[0].id_tipo_flor_cultivo)) {
-            that.aux.notification('Bouquet Information:', 'Require at least one', 'warning');
+        if (!that.regExp.empty.test(arrBouquetRecipe[0].id_tipo_flor_cultivo) || !that.regExp.empty.test(arrBouquetRecipe[0].id_variedad_flor_cultivo) || !that.regExp.empty.test(arrBouquetRecipe[0].id_grado_flor_cultivo)) {
+            that.aux.notification('Recipe Detail:', 'Require at least one recipe', 'warning');
             return;
         }
 
@@ -1420,7 +1465,6 @@ var DefinirReceta = function () {
             return;
         }
 
-        debugger
         //Obtengo id detalle
         that.InsertBasicBouquetDescription();
         
@@ -1438,43 +1482,55 @@ var DefinirReceta = function () {
         that.InsertObservation();
         that.LoadBouquets();
         that.aux.notification('', 'All saved', 'success');
-        this.$tbBouquets.find('[id*=spLoadDetail]:eq(' + that.indexRowBouquet + ')').trigger('click');
+        that.$tbBouquets.find('[id*=spLoadDetail]:eq(' + that.indexRowBouquet + ')').trigger('click');
     }
 
     this.InsertBasicBouquetDescription = function () {
         var dataBouquetRecipe = that.$tbBouquetRecipe.bootstrapTable('getData');
         var totalStems = 0;
+        var data = [];
         var arr = $.map(dataBouquetRecipe, function (value, key) {
             if (that.aux.nullOrEmpty(value.id_variedad_flor_cultivo) && that.aux.nullOrEmpty(value.id_grado_flor_cultivo) && that.aux.nullOrEmpty(value.cantidad_tallos))
                 return value.id_variedad_flor_cultivo + ',' + value.id_grado_flor_cultivo + ',' + value.cantidad_tallos
         });
-            
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'InsertBouquetRecipe', 'POST',
-        '{ "nombre_formula" : "' + that.$txtName.val() + '", "id_version_bouquet" : "' + that.dataDetailPO.id_version_bouquet +
-        '", "especificacion" : "' + that.$txtaSpecs.val().replace('"', '') + '", "construccion":"' + that.$txtaConstruction.val() +
-        '", "cadena_formula":"' + arr.join('$') + '", "opcion_menu": "0", "unidades":"' + that.$txtBunches.val() +
-        '", "precio":' + that.$txtMiamiPrice.val() + ', "id_comida":"' + that.id_comida_bouquet +
-        '", "id_detalle_version_bouquet":' + that.dataDetailBouquet.id_detalle_version_bouquet +
-        ', "id_formato_upc": "' + that.id_formato_upc + '" }');
-
+        try {
+            data = AjaxQuery2('../../../Bouquets/ws', 'InsertBouquetRecipe', 'POST',
+            '{ "nombre_formula" : "' + that.$txtName.val() + '", "id_version_bouquet" : "' + that.dataDetailPO.id_version_bouquet +
+            '", "especificacion" : "' + that.$txtaSpecs.val().replace('"', '') + '", "construccion":"' + that.$txtaConstruction.val() +
+            '", "cadena_formula":"' + arr.join('$') + '", "opcion_menu": "3", "unidades":"' + that.$txtBunches.val() +
+            '", "precio":' + that.$txtMiamiPrice.val() + ', "id_comida":"' + that.id_comida_bouquet +
+            '", "id_detalle_version_bouquet":' + that.dataDetailBouquet.id_detalle_version_bouquet +
+            ', "id_formato_upc": "' + that.id_formato_upc + '" }');
+        } catch (e) {
+            that.aux.notification('Error: ', e.message, 'danger');
+        }
+        
         that.dataDetailBouquet.id_detalle_version_bouquet = data[0].id_detalle_version_bouquet;
+        that.id_formula_bouquet = data[0].id_formula_bouquet;
         that.CountStems();
     }
 
     this.InsertObservation = function () {
-        var recipes = $.map(that.$tbBouquetRecipe.bootstrapTable('getData'), function (value, key) {
-            if (that.aux.nullOrEmpty(value.id_variedad_flor_cultivo) && that.aux.nullOrEmpty(value.id_grado_flor_cultivo) && that.aux.nullOrEmpty(value.cantidad_tallos))
-                return {
-                    id_variedad_flor_cultivo: value.id_variedad_flor_cultivo,
-                    id_grado_flor_cultivo: value.id_grado_flor_cultivo,
-                    cantidad_tallos: value.cantidad_tallos,
-                    observacion: value.observacion,
-                    id_variedad_flor_cultivo_sustitucion: value.id_variedad_flor_cultivo_sustitucion,
-                    id_grado_flor_cultivo_sustitucion: value.id_grado_flor_cultivo_sustitucion
-                }
-        });
+        if (that.dataDetailBouquet.id_detalle_version_bouquet !== undefined || that.dataDetailBouquet.id_detalle_version_bouquet != 0) {
+            var recipes = $.map(that.$tbBouquetRecipe.bootstrapTable('getData'), function (value, key) {
+                if (that.aux.nullOrEmpty(value.id_variedad_flor_cultivo) && that.aux.nullOrEmpty(value.id_grado_flor_cultivo) && that.aux.nullOrEmpty(value.cantidad_tallos))
+                    return {
+                        id_variedad_flor_cultivo: value.id_variedad_flor_cultivo,
+                        id_grado_flor_cultivo: value.id_grado_flor_cultivo,
+                        cantidad_tallos: value.cantidad_tallos,
+                        observacion: value.observacion,
+                        id_variedad_flor_cultivo_sustitucion: value.id_variedad_flor_cultivo_sustitucion,
+                        id_grado_flor_cultivo_sustitucion: value.id_grado_flor_cultivo_sustitucion
+                    }
+            });
 
-        AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'InsertObservation', 'POST', '{"liRecipes": ' + JSON.stringify(recipes) + ', "id_formula_bouquet":"' + that.id_formula_bouquet + '", "id_detalle_version_bouquet":' + that.dataDetailBouquet.id_detalle_version_bouquet + '}');
+            try {
+                AjaxQuery2('../../../Bouquets/ws', 'InsertObservation', 'POST', '{"liRecipes": ' + JSON.stringify(recipes) + ', "id_formula_bouquet":"' + that.id_formula_bouquet + '", "id_detalle_version_bouquet":' + that.dataDetailBouquet.id_detalle_version_bouquet + '}');
+            } catch (e) {
+                that.aux.notification('Error: ', e.message, 'danger');
+            }
+            
+        }
     }
 
     this.OpenModalSearch = function (e, value, row, index) {
@@ -1486,7 +1542,11 @@ var DefinirReceta = function () {
         var arrSearchBouquet = $.map(that.$selParametros.find('option:selected'), function (element, index) {
             return element.value
         });
-        that.dataSearchBouquet = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadSearchBouquet', 'POST', '{ "texto" : "' + that.$txtTextSearch.val() + '", "columnas":"' + arrSearchBouquet.join() + '" }');
+        try {
+            that.dataSearchBouquet = AjaxQuery2('../../../Bouquets/ws', 'ReadSearchBouquet', 'POST', '{ "texto" : "' + that.$txtTextSearch.val() + '", "columnas":"' + arrSearchBouquet.join() + '" }');
+        } catch (e) {
+            that.aux.notification('Error: ', e.message, 'danger');
+        }
         that.$tbSearchBouquet.bootstrapTable('load', that.dataSearchBouquet);
     }
 
@@ -1615,7 +1675,7 @@ var DefinirReceta = function () {
     }        
 
     this.LoadEmptyDataBouquetRecipe = function () {
-        var data = AjaxQuery2('../../../Old_App_Code/Natuflora/WebService/Bouquets/WSBouquets.asmx', 'ReadBouquetRecipe', 'POST', '{ "id_detalle_version_bouquet" : 0, "getModel" : true, "emptyRow" : false }');
+        var data = AjaxQuery2('../../../Bouquets/ws', 'ReadBouquetRecipe', 'POST', '{ "id_detalle_version_bouquet" : 0, "getModel" : true, "emptyRow" : false }');
         data = $.each(data, function (id, item) {
             data[id] = ''
         });

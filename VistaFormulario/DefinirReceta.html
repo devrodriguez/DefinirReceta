@@ -1,14 +1,21 @@
 ﻿<!DOCTYPE html >
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css" />
-    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" />
+    <!--<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css" />-->
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/tinysort/2.2.2/tinysort.min.js"></script>-->
     <!--<link href="../../../App_Themes/Fresca/bootstrap.min.css" rel="stylesheet" />-->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-    <!--<script src="../../../JavaScript/Bootstrap/bootstrap.min.js"></script>-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinysort/2.2.2/tinysort.min.js"></script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>-->
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>-->
+    <!--<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" />-->
+    <!--<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>-->
+
+    <link href="../../../App_Themes/Fresca/jqueryui/1.11.3/jquery-ui.css" rel="stylesheet" />
+    <link href="../../../App_Themes/Fresca/bootstrap/3.3.4/bootstrap.min.css" rel="stylesheet" />
+
+    <script src="../../../JavaScript/JQuery/2.1.3/jquery.min.js"></script>
+    <script src="../../../JavaScript/jqueryui/1.11.3/jquery-ui.min.js"></script>
+    <script src="../../../JavaScript/Bootstrap/bootstrap.min.js"></script>
+    <script src="../../../JavaScript/tinysort/2.2.2/tinysort.min.js"></script>
     <script src="../../../JavaScript/Bootstrap/bootstrap-table.min.js"></script>
     <style type="text/css">
         * {
@@ -95,6 +102,7 @@
         .alert {
             padding: 8px;
             margin-bottom: 5px;
+            box-shadow:  0px 5px 5px 0px rgba(50, 50, 50, 0.75);
         }
 
         .alert-floating {
@@ -104,6 +112,7 @@
             position: fixed;
             top: -18px;
             right: 50%;
+            z-index: 999999;
         }
 
         .input-group {
@@ -210,7 +219,7 @@
                             </div>
                             <div class="input-group">
                                 <span class="input-group-addon addon-size">Name</span>
-                                <input type="text" id="txtName" class="form-control" />
+                                <input type="text" id="txtName" class="form-control" style="text-transform:uppercase;" />
                             </div>
                             <div class="input-group">
                                 <span class="input-group-addon">Specs</span>
